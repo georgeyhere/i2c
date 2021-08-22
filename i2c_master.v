@@ -44,7 +44,7 @@
 //
 module i2c_master#
 	(
-		parameter CLK_FREQ = 100_000_000
+		parameter T_CLK = 10
 	) 
 	(
 	input  wire       i_clk,         // 100 MHz clock
@@ -89,19 +89,18 @@ module i2c_master#
 
 // **** Timing Parameters ****
 // 
-	localparam T_CLK = 1/CLK_FREQ;
-	//
-	localparam T_SU_STA = 600/T_CLK,  // START condition setup time  
-	           T_HD_STA = 600/T_CLK,  // START condition hold time
-               T_LOW    = 1300/T_CLK, // SCL low time
-	           T_HIGH   = 600/T_CLK,  // SCL high time
-	           T_HD_DAT = 300/T_CLK,  // Data-in hold time
-               T_SU_DAT = 100/T_CLK,  // Data-in setup time,
-               T_SU_STO = 600/T_CLK;  // STOP condition setup time 
+	localparam T_SU_STA = 600/T_CLK;  // START condition setup time  
+	localparam T_HD_STA = 600/T_CLK;  // START condition hold time
+    localparam T_LOW    = 1300/T_CLK; // SCL low time
+	localparam T_HIGH   = 600/T_CLK;  // SCL high time
+	localparam T_HD_DAT = 300/T_CLK;  // Data-in hold time
+    localparam T_SU_DAT = 100/T_CLK;  // Data-in setup time,
+    localparam T_SU_STO = 600/T_CLK;  // STOP condition setup time 
 
     // timer counter
-    reg [$clog2(T_LOW)-1:0] timer     = 0;
-    reg [$clog2(T_LOW)-1:0] nxt_timer = 0;
+    localparam TIMER_WIDTH = $clog2(T_LOW);
+    reg [TIMER_WIDTH-1:0] timer     = 0;
+    reg [TIMER_WIDTH-1:0] nxt_timer = 0;
 
 
 
@@ -118,7 +117,9 @@ module i2c_master#
 
 	reg [3:0] STATE = STATE_INITIAL;
 	reg [3:0] NEXT_STATE;
+
 	reg [3:0] RETURN_STATE;
+	reg [3:0] NEXT_RETURN_STATE;
 
 
 	reg [26:0] sda_txqueue;
@@ -183,36 +184,42 @@ module i2c_master#
 // **** FSM Next State Logic ****
 //
 	always@* begin
-		nxt_scl_o        = scl_o;          // scl is floating by default           
-		nxt_sda_o        = sda_o;          // sda is floating by default
-        
-        load_r           = 0;
-        nxt_wr_cycle     = wr_cycle;
-		nxt_sda_txqueue  = sda_txqueue;
-        nxt_read_sr      = read_sr;
-        
-        nxt_rdata        = o_rdata;
-		nxt_busy         = o_busy;
-		nxt_rdata_valid  = o_rdata_valid;
-		nxt_nack_slave   = o_nack_slave;
-		nxt_nack_addr    = o_nack_addr;
-		nxt_nack_data    = o_nack_data;
- 
-		nxt_timer        = timer;
+		nxt_scl_o         = scl_o;          // scl is floating by default           
+		nxt_sda_o         = sda_o;          // sda is floating by default
+         
+        load_r            = 0;
+        nxt_wr_cycle      = wr_cycle;
+		nxt_sda_txqueue   = sda_txqueue;
+        nxt_read_sr       = read_sr;
+         
+        nxt_rdata         = o_rdata;
+		nxt_busy          = o_busy;
+		nxt_rdata_valid   = o_rdata_valid;
+		nxt_nack_slave    = o_nack_slave;
+		nxt_nack_addr     = o_nack_addr;
+		nxt_nack_data     = o_nack_data;
+  
+		nxt_timer         = timer;
 
-		NEXT_STATE       = STATE;
-		RETURN_STATE     = STATE;
+		NEXT_STATE        = STATE;
+		NEXT_RETURN_STATE = RETURN_STATE;
 
 		case(STATE)
 
 			// initial state
 			//     -> T_SU_STA (START setup time)
+			//
+			//     ___
+			// SDA 
+			//     ___
+			// SCL 
+			//
 			STATE_INITIAL: begin
-				nxt_scl_o    = 1;
-				nxt_sda_o    = 1;
-				timer        = T_SU_STA;
-				NEXT_STATE   = STATE_TIMER;
-				RETURN_STATE = STATE_IDLE;
+				nxt_scl_o         = 1;
+				nxt_sda_o         = 1;
+				nxt_timer         = T_SU_STA;
+				NEXT_STATE        = STATE_TIMER;
+				NEXT_RETURN_STATE = STATE_IDLE;
 			end
 			
 		    // idle state; SCL and SDA are high
@@ -234,6 +241,11 @@ module i2c_master#
 
 			// START condition; pull SDA low 
 			//     -> T_HD_STA (START hold time)
+			//     __
+			// SDA   \_
+			//     ____
+			// SCL 
+			//
 			STATE_START: begin
                 nxt_sda_o       = 0;
                 nxt_bit_counter = 0;
@@ -270,35 +282,49 @@ module i2c_master#
                                        1'b1};        // release; slave ack [0]
 				end
 
-				timer        = T_HD_STA;
-                NEXT_STATE   = (!sda_i) ? STATE_TIMER : STATE_START;
-                RETURN_STATE = STATE_BIT1;
+				nxt_timer         = T_HD_STA;
+                NEXT_STATE        = (!sda_i) ? STATE_TIMER : STATE_START;
+                NEXT_RETURN_STATE = STATE_BIT1;
 			end
             
             // Bit Part 1; pull SCL low
             //     -> T_HD_DAT (Data-in Hold Time)
+            //     
+			// SDA ____
+			//     __
+			// SCL   \_
+			//
             STATE_BIT1: begin
-            	nxt_scl_o    = 0;
-            	timer        = T_HD_DAT;
-            	NEXT_STATE   = (!scl) ? STATE_TIMER : STATE_BIT1;
-            	RETURN_STATE = STATE_BIT2;
+            	nxt_scl_o         = 0;
+            	nxt_timer         = T_HD_DAT;
+            	NEXT_STATE        = (!scl) ? STATE_TIMER : STATE_BIT1;
+            	NEXT_RETURN_STATE = STATE_BIT2;
             end
 
             // Bit Part 2: SDA transaction
             //     -> T_LOW (SCL low time)
+            //        __
+			// SDA __/__
+			//     
+			// SCL _____
+			//
             STATE_BIT2: begin
-            	nxt_sda_o       = sda_txqueue[26]; 
-            	nxt_sda_txqueue = {sda_txqueue[25:0], 1'b0};
-            	timer           = T_LOW;
-            	NEXT_STATE      = STATE_TIMER;
-            	RETURN_STATE    = STATE_BIT3;
+            	nxt_sda_o         = sda_txqueue[26]; 
+            	nxt_sda_txqueue   = {sda_txqueue[25:0], 1'b0};
+            	nxt_timer         = T_LOW;
+            	NEXT_STATE        = STATE_TIMER;
+            	NEXT_RETURN_STATE = STATE_BIT3;
             end
 
             // Bit Part 3: release SCL high
+            //      ____
+            // SDA /____
+            //        __
+            // SCL __/
             //
             STATE_BIT3: begin
             	nxt_scl_o       = 1;
-            	timer           = T_HIGH;
+            	nxt_timer       = T_HIGH;
 
             	if(scl) begin
             		nxt_bit_counter = bit_counter + 1;
@@ -316,22 +342,27 @@ module i2c_master#
             		// for reads:  state transition after second slave ACK
             		// for writes: state transition at end of transmission
             		if( ((bit_counter == 18) & (r_rd)) || (bit_counter == 27)) begin
-            			timer        = T_SU_STO;
-            			NEXT_STATE   = STATE_TIMER;
-            			RETURN_STATE = STATE_STOP;
+            			nxt_timer         = T_SU_STO;
+            			NEXT_STATE        = STATE_TIMER;
+            			NEXT_RETURN_STATE = STATE_STOP;
             		end
             		else begin
             			if((bit_counter != 17) && (r_rd)) begin
             				nxt_read_sr = {read_sr[6:1], sda};
             			end
-            			timer        = T_HIGH;
-            			NEXT_STATE   = STATE_TIMER;
-            			RETURN_STATE = STATE_BIT1;
+            			nxt_timer         = T_HIGH;
+            			NEXT_STATE        = STATE_TIMER;
+            			NEXT_RETURN_STATE = STATE_BIT1;
             		end 
             	end
             end
 
-            // Stop Condition Part 1
+            // Stop Condition 
+            //      __
+            // SDA X__\__
+            //     ______
+            // SCL 
+            //
             STATE_STOP: begin
             	sda_o = 1;
             	if(sda) begin
@@ -340,19 +371,19 @@ module i2c_master#
             	    	// read write register address done
             	    	if(wr_cycle) begin
             	    		if(r_rd) begin
-            	    			timer = T_SU_STA - T_SU_STO;
+            	    			nxt_timer = T_SU_STA - T_SU_STO;
             	    		end
             	    		else begin
-            	    			timer = T_SU_STA;
+            	    			nxt_timer = T_SU_STA;
             	    		end
-            	    		RETURN_STATE = STATE_START;
+            	    		NEXT_RETURN_STATE = STATE_START;
             	    	end
             	    	// read received
             	    	else begin
-            	    		nxt_rdata       = read_sr;
-            	    		nxt_rdata_valid = 1;
-            	    		timer           = T_SU_STA;
-            	    		RETURN_STATE    = STATE_IDLE;
+            	    		nxt_rdata         = read_sr;
+            	    		nxt_rdata_valid   = 1;
+            	    		nxt_timer         = T_SU_STA;
+            	    		NEXT_RETURN_STATE = STATE_IDLE;
             	    	end
             	    	nxt_wr_cycle = 0;
             	    	NEXT_STATE   = STATE_TIMER;
@@ -360,10 +391,10 @@ module i2c_master#
 
             	    // writes
             	    else begin
-    					nxt_rdata_valid = 0;
-    					timer           = T_SU_STA;
-    					NEXT_STATE      = STATE_TIMER;
-    					RETURN_STATE    = STATE_IDLE;
+    					nxt_rdata_valid   = 0;
+    					nxt_timer         = T_SU_STA;
+    					NEXT_STATE        = STATE_TIMER;
+    					NEXT_RETURN_STATE = STATE_IDLE;
             	    end
                 end
             end
@@ -407,7 +438,10 @@ module i2c_master#
             r_reg_addr    <= 0;
             r_wdata       <= 0;
 
+            timer         <= 0;
+
 			STATE         <= STATE_INITIAL;
+			RETURN_STATE  <= STATE_IDLE;
 		end
 		else begin
 			o_rdata       <= nxt_rdata;
@@ -427,6 +461,8 @@ module i2c_master#
 			wr_cycle      <= nxt_wr_cycle;
 			repeat_start  <= nxt_repeat_start;
 
+			timer         <= nxt_timer;
+
 			if(load_r) begin
 				r_wr         <= i_wr;
 				r_rd         <= i_rd;
@@ -434,6 +470,9 @@ module i2c_master#
 				r_reg_addr   <= i_reg_addr;
 				r_wdata      <= i_wdata;
 			end
+
+			STATE         <= NEXT_STATE;
+			RETURN_STATE  <= NEXT_RETURN_STATE;
 		end
 	end
 
