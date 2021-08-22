@@ -1,5 +1,7 @@
-//
-//
+// directed unit tests for i2c_master
+// -> just to test functionality on a *very limted* scale
+// -> use SystemVerilog testbench instead
+// 
 module i2c_master_tb();
 
     reg        i_clk = 0;
@@ -16,15 +18,29 @@ module i2c_master_tb();
     wire       o_rdata_valid;
     wire [2:0] nack_status;
 
-    wire scl, sda;
+    wire       i_scl, i_sda;
+    wire       o_scl, o_sda;
 
-    pullup(scl);
-    pullup(sda);
 
-    always#(5) i_clk = ~i_clk;
+// simulate SCL and SDA pins
+//
+    wire       SCL, SDA;
+    pullup(SCL);
+    pullup(SDA);
 
+    assign SCL = (o_scl) ? 1'bz : 1'b0;
+    assign SDA = (o_sda) ? 1'bz : 1'b0;
+
+    assign i_scl = SCL;
+    assign i_sda = SDA;
+
+// generate clock
+//
     parameter T_CLK = 10;
+    always#(T_CLK/2) i_clk = ~i_clk;
 
+// instantiate DUT
+//
     i2c_master 
     #(
     .T_CLK (T_CLK)
@@ -52,8 +68,10 @@ module i2c_master_tb();
     .o_nack_data   (nack_status[0] ), // NACK on data frame
 
     // bidirectional i2c pins
-    .SCL           (scl            ), 
-    .SDA           (sda            )  
+    .i_scl         (i_scl          ),
+    .i_sda         (i_sda          ),
+    .o_scl         (o_scl          ),
+    .o_sda         (o_sda          ) 
     );
 
     initial begin

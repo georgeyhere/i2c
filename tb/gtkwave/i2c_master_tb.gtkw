@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.3.109 (w)1999-2020 BSI
+[*] Sun Aug 22 18:02:52 2021
+[*]
+[dumpfile] "C:\Users\work\Documents\repos\Basics\i2c\gtkwave\i2c_master_tb.vcd"
+[savefile] "C:\Users\work\Documents\repos\Basics\i2c\gtkwave\i2c_master_tb.gtkw"
+[timestart] 0
+[size] 1920 1017
+[pos] -165 -165
+*-10.000000 745 745 1375 1725 3045 3725 4075 5395 6075 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] i2c_master_tb.
+[sst_width] 192
+[signals_width] 349
+[sst_expanded] 1
+[sst_vpaned_height] 653
+@28
+i2c_master_tb.i_clk
+i2c_master_tb.i_rstn
+@200
+-status
+@28
+i2c_master_tb.nack_status[2:0]
+i2c_master_tb.o_busy
+i2c_master_tb.o_rdata_valid
+@200
+-i/o
+@29
+[color] 3
+i2c_master_tb.SDA
+[color] 3
+i2c_master_tb.SCL
+@200
+-control
+@28
+i2c_master_tb.i_wr
+@22
+i2c_master_tb.i_reg_addr[7:0]
+i2c_master_tb.i_wdata[7:0]
+@28
+i2c_master_tb.DUT.sda_txqueue[26:0]
+@200
+-FSM
+@2024
+[color] 2
+^1 C:\Users\work\Documents\repos\Basics\i2c\gtkwave\fsm_filter.txt
+i2c_master_tb.DUT.STATE[3:0]
+[color] 2
+^1 C:\Users\work\Documents\repos\Basics\i2c\gtkwave\fsm_filter.txt
+i2c_master_tb.DUT.NEXT_STATE[3:0]
+[color] 2
+^1 C:\Users\work\Documents\repos\Basics\i2c\gtkwave\fsm_filter.txt
+i2c_master_tb.DUT.RETURN_STATE[3:0]
+@24
+[color] 7
+i2c_master_tb.DUT.bit_counter[4:0]
+@200
+-internal
+@22
+[color] 5
+i2c_master_tb.DUT.timer[7:0]
+@200
+-debounce
+@28
+i2c_master_tb.DUT.sda_sr[3:0]
+i2c_master_tb.DUT.scl_sr[3:0]
+[pattern_trace] 1
+[pattern_trace] 0
