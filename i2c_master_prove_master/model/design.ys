@@ -1,0 +1,13 @@
+# running in i2c_master_prove_master/src/
+read_verilog -formal i2c_master.v
+prep -top i2c_master
+
+memory_nordff
+clk2fflogic
+chformal -live -fair -cover -remove
+opt_clean
+setundef -anyseq
+opt -keepdc -fast
+check
+hierarchy -simcheck
+write_ilang ../model/design.il

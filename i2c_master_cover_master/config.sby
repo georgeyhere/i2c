@@ -1,0 +1,14 @@
+[options]
+mode cover
+multiclock on
+depth 66
+
+[engines]
+smtbmc
+
+[script]
+read_verilog -formal i2c_master.v
+prep -top i2c_master
+
+[files]
+i2c_master.v

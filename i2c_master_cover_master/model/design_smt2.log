@@ -1,0 +1,69 @@
+
+ /----------------------------------------------------------------------------\
+ |                                                                            |
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |                                                                            |
+ |  Copyright (C) 2012 - 2020  Claire Xenia Wolf <claire@yosyshq.com>         |
+ |                                                                            |
+ |  Permission to use, copy, modify, and/or distribute this software for any  |
+ |  purpose with or without fee is hereby granted, provided that the above    |
+ |  copyright notice and this permission notice appear in all copies.         |
+ |                                                                            |
+ |  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |
+ |  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |
+ |  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |
+ |  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |
+ |  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |
+ |  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |
+ |  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |
+ |                                                                            |
+ \----------------------------------------------------------------------------/
+
+ Yosys 0.9+4081 (git sha1 7a5ac909, clang 6.0.0-1ubuntu2 -fPIC -Os)
+
+
+-- Executing script file `design_smt2.ys' --
+
+1. Executing RTLIL frontend.
+Input filename: design.il
+
+2. Executing DFFUNMAP pass (unmap clock enable and synchronous reset from FFs).
+
+3. Printing statistics.
+
+=== i2c_master ===
+
+   Number of wires:                307
+   Number of wire bits:            959
+   Number of public wires:          46
+   Number of public wire bits:     186
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                320
+     $add                            1
+     $and                            3
+     $anyseq                        28
+     $assert                        13
+     $assume                         9
+     $eq                            24
+     $eqx                            1
+     $ff                            73
+     $initstate                      1
+     $le                             1
+     $logic_and                      4
+     $logic_not                     10
+     $logic_or                       5
+     $mux                          124
+     $ne                             2
+     $not                            4
+     $pmux                          12
+     $reduce_or                      4
+     $sub                            1
+
+4. Executing SMT2 backend.
+Creating SMT-LIBv2 representation of module i2c_master.
+
+End of script. Logfile hash: c4ce5c877c, CPU: user 0.01s system 0.00s, MEM: 10.98 MB peak
+Yosys 0.9+4081 (git sha1 7a5ac909, clang 6.0.0-1ubuntu2 -fPIC -Os)
+Time spent: 60% 2x write_smt2 (0 sec), 37% 2x read_ilang (0 sec), ...

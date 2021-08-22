@@ -1,0 +1,20 @@
+[tasks]
+cover_master
+prove_master
+
+[options]
+prove_master: mode prove
+cover_master: mode cover
+multiclock on
+depth 66
+
+[engines]
+cover_master: smtbmc
+prove_master: smtbmc
+
+[script]
+read_verilog -formal i2c_master.v
+prep -top i2c_master
+
+[files]
+i2c_master.v

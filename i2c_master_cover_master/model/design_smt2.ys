@@ -1,0 +1,5 @@
+# running in i2c_master_cover_master/model/
+read_ilang design.il
+dffunmap
+stat
+write_smt2 -wires design_smt2.smt2
