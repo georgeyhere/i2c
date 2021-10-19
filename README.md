@@ -1,7 +1,3 @@
 # i2c master
- formally verified Verilog i2c master
-
-
- - Todo
--> verify timings against i2c datasheet
-
+ 
+ A pretty run-of-the-mill i2c master. Uses a basic ready-valid interface for reads and writes. More documentation to come.
